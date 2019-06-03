@@ -5,6 +5,12 @@ tartar of convention that handicaps its retrieval.***
 
 --- [Notational Velocity home page](http://notational.net/)
 
+Notational Velocity is a note-taking app where searching for a note and
+creating one are the same operation.
+
+You search for a query, and if no note matches, it creates a new note
+with that query as the title.
+
 ## Usage
 
 See the following GIF or watch this
@@ -274,3 +280,7 @@ Is ***always*** welcome. If you have any ideas or issues, let me know
 and I'll try to address them. Not all will be implemented, but if they
 fit into the philosophy of this plugin or seem really useful, I'll do my
 best.
+
+## License
+
+Apache 2
