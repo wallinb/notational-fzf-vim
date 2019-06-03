@@ -77,6 +77,7 @@ let s:search_path_str = join(map(copy(s:search_paths), 'shellescape(v:val)'))
 "=========================== Keymap ========================================
 
 let s:create_note_key = get(g:, 'nv_create_note_key', 'ctrl-x')
+let s:create_local_note_key = get(g:, 'nv_create_local_note_key', 'ctrl-l')
 let s:yank_key = get(g:, 'nv_yank_key', 'ctrl-y')
 let s:create_note_window = get(g:, 'nv_create_note_window', 'vertical split ')
 
@@ -89,6 +90,7 @@ let s:keymap = get(g:, 'nv_keymap',
 " Use `extend` in case user overrides default keys
 let s:keymap = extend(s:keymap, {
             \ s:create_note_key : s:create_note_window,
+            \ s:create_local_note_key : s:create_note_window,
             \ })
 
 " FZF expects a comma separated string.
@@ -178,6 +180,42 @@ function! s:handler(lines) abort
 
 endfunction
 
+
+function! NV_note_handler(lines) abort
+   " exit if empty
+   if a:lines == [] || a:lines == ['','','']
+       return
+   endif
+   " expect at least 2 elements, query and keypress, which may be empty strings
+   let query = a:lines[0]
+   let keypress = a:lines[1]
+   " Don't forget to add spaces for the commands
+   let cmd = get(s:keymap, keypress, 'edit')
+   " Preprocess candidates here. Expect lines to have format
+   " `filename:linenum:content`
+   
+   if keypress ==? s:create_local_note_key
+     let candidates = [fnameescape(g:nv_local_dir  . '/' . query . s:ext)]
+   elseif keypress ==? s:create_note_key
+     let candidates = [fnameescape(s:main_dir  . '/' . query . s:ext)]
+   else
+       let filenames = a:lines[2:]
+       let l:candidates = []
+       for l:filename in l:filenames
+           " Don't forget trailing space in replacement.
+           let linenum = substitute(filename, '\v.{-}:(\d+):.*$', '+\1 ', '')
+           let name = substitute(filename, '\v(.{-}):\d+:.*$', '\1', '')
+           " fnameescape instead of shellescape because the file is consumed
+           " by vim rather than the shell
+           call add(candidates, linenum . fnameescape(name))
+       endfor
+   endif
+
+   for candidate in candidates
+       execute join([cmd, candidate])
+   endfor
+endfunction
+
 " If the file you're looking for is empty, then why does it even exist? It's a
 " note. Just type its name. Hence we ignore lines with only space characters,
 " and use the "\S" regex.
@@ -241,5 +279,3 @@ command! -nargs=* -bang NV
                                                             \ 'v:val != "" ')
                                                        \ ,':')
                                \ ])},<bang>0))
-
-
